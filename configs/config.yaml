@@ -1,0 +1,109 @@
+# =============================================================================
+# config.yaml — AI-Driven Supply Chain Predictive Monitoring System
+# =============================================================================
+
+project:
+  name: "AI-Driven Predictive Monitoring System for Supply Chain Disruptions"
+  version: "1.0.0"
+  description: >
+    End-to-end ML system for predicting shipment delays, estimating disruption
+    risk, detecting logistics anomalies, and enabling proactive decision-making.
+
+# ─── Data ─────────────────────────────────────────────────────────────────────
+data:
+  raw_dir: "data/"
+  processed_dir: "data/processed/"
+  models_dir: "models/"
+
+  generation:
+    seed: 42
+    n_shipments: 10000
+    n_suppliers: 50
+    n_ports: 20
+    start_date: "2023-01-01"
+    end_date:   "2025-12-31"
+
+  split:
+    test_size: 0.15
+    val_size:  0.15
+    time_based: true          # split on ship_date (no data leakage)
+
+# ─── Feature Engineering ──────────────────────────────────────────────────────
+features:
+  rolling_windows: [7, 14, 30]   # days for rolling mean/std features
+  lag_periods:     [1, 7, 14]    # lag days for congestion time-series
+  categorical_cols: ["transport_mode"]
+  risk_weights:
+    weather_severity: 0.30
+    port_congestion:  0.25
+    supplier_risk:    0.30
+    traffic_level:    0.15
+
+# ─── XGBoost ──────────────────────────────────────────────────────────────────
+xgboost:
+  classifier:
+    n_estimators:      500
+    max_depth:         6
+    learning_rate:     0.05
+    subsample:         0.80
+    colsample_bytree:  0.80
+    min_child_weight:  5
+    gamma:             0.1
+    reg_alpha:         0.05
+    reg_lambda:        1.0
+    eval_metric:       "auc"
+    early_stopping_rounds: 40
+    scale_pos_weight:  null   # set dynamically from class ratio
+
+  regressor:
+    n_estimators:      500
+    max_depth:         5
+    learning_rate:     0.05
+    subsample:         0.80
+    colsample_bytree:  0.80
+    min_child_weight:  5
+    eval_metric:       "rmse"
+    early_stopping_rounds: 40
+
+# ─── LSTM ─────────────────────────────────────────────────────────────────────
+lstm:
+  sequence_length:  30      # days of history as input
+  forecast_horizon: 7       # days ahead to forecast
+  input_features:   ["congestion_level", "queue_time_hours", "weather_severity"]
+  hidden_size:      128
+  num_layers:       2
+  dropout:          0.20
+  batch_size:       64
+  epochs:           80
+  learning_rate:    0.001
+  patience:         12       # early stopping patience
+  gradient_clip:    1.0
+
+# ─── Anomaly Detection ────────────────────────────────────────────────────────
+anomaly:
+  contamination:     0.05    # expected fraction of anomalies
+  isolation_forest:
+    n_estimators:    200
+    max_samples:     "auto"
+    random_state:    42
+  lof:
+    n_neighbors:     20
+    algorithm:       "auto"
+  thresholds:
+    high_risk_score:     0.70
+    critical_delay_hours: 120.0
+    congestion_alert:    0.80
+
+# ─── API ──────────────────────────────────────────────────────────────────────
+api:
+  host:    "0.0.0.0"
+  port:    8000
+  reload:  false
+  log_level: "info"
+
+# ─── Dashboard ────────────────────────────────────────────────────────────────
+dashboard:
+  port:          8501
+  page_title:    "Supply Chain AI Monitor"
+  refresh_secs:  60
+  default_lookback_days: 90
