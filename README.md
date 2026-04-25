@@ -8,7 +8,13 @@ Research-grade end-to-end agentic decision and predictive monitoring system for 
 - FastAPI inference service
 - Streamlit monitoring dashboard
 
-## 1. Why This Project
+## 1. Dashboard Overview
+
+**Click the dashboard preview below to view the full interactive screenshot:**
+
+[![Dashboard Preview](reports/figures/Dashbord_half_page.png)](reports/figures/dashboard-full.png)
+
+## 2. Why This Project
 
 Global supply chains are exposed to stochastic disruptions from weather, port congestion, supplier instability, and transport variability. Traditional reactive workflows detect disruption too late.
 
@@ -18,7 +24,7 @@ This project implements a predictive monitoring framework to:
 - Detect anomalous behavior in near real time
 - Support proactive intervention (rerouting, supplier fallback, expedite mode)
 
-## 2. Project Objectives
+## 3. Project Objectives
 
 1. Build realistic synthetic data representing multi-factor supply chain behavior.
 2. Train robust ML models for delay probability and delay-hours estimation.
@@ -26,7 +32,7 @@ This project implements a predictive monitoring framework to:
 4. Detect anomalies for operational early warning.
 5. Expose predictions and decision support signals through API and dashboard for practical MLOps integration.
 
-## 3. Scope
+## 4. Scope
 
 ### In Scope
 - Data generation for:
@@ -48,7 +54,7 @@ This project implements a predictive monitoring framework to:
 - Production authentication/authorization hardening
 - Cloud deployment IaC
 
-## 4. Repository Structure
+## 5. Repository Structure
 
 ```text
 Agentic-SupplyChain-Decision-System/
@@ -90,7 +96,7 @@ Agentic-SupplyChain-Decision-System/
 └── AGENT.md
 ```
 
-## 18. Implemented Improvement Baseline
+## 17. Implemented Improvement Baseline
 
 The following items from the improvement roadmap are now implemented in code:
 
@@ -125,7 +131,7 @@ The following items from the improvement roadmap are now implemented in code:
 - Action recommendation and cost-impact estimation in `src/decision/intelligence.py`.
 - API prediction now includes action, expected delay reduction, and estimated cost avoided.
 
-## 19. New Operational Commands
+## 18. New Operational Commands
 
 ```bash
 # Train with quality gates + lineage + champion-challenger + calibration
@@ -162,7 +168,7 @@ Model/design tab image inputs (optional):
 - `dashboard/assets/explainability.png`
 - `dashboard/assets/forecasting.png`
 
-## 5. Data Design and Synthetic Generation Logic
+## 6. Data Design and Synthetic Generation Logic
 
 Synthetic generation follows explicit stochastic assumptions with causal structure:
 
@@ -187,34 +193,34 @@ Synthetic generation follows explicit stochastic assumptions with causal structu
 - Event process intensity increases with delay severity
 - Event type weighted by underlying causal factors
 
-## 6. Modeling Architecture
+## 7. Modeling Architecture
 
-### 6.1 Delay Classification
+### 7.1 Delay Classification
 - Algorithm: XGBoostClassifier
 - Target: `delayed` (0/1)
 - Metrics: ROC-AUC, Average Precision, F1-Macro
 - Imbalance handling: dynamic `scale_pos_weight`
 
-### 6.2 Delay-Hours Regression
+### 7.2 Delay-Hours Regression
 - Algorithm: XGBoostRegressor
 - Target: `delay_hours`
 - Trained on delayed shipments only
 - Log-transform target for variance stabilization
 - Metrics: RMSE, MAE, R²
 
-### 6.3 Sequence Forecasting
+### 7.3 Sequence Forecasting
 - Algorithm: PyTorch LSTM
 - Input window: 30 days
 - Horizon: 7 days
 - Features: congestion, queue time, weather severity
 - Metrics: step-wise MAE/RMSE
 
-### 6.4 Anomaly Detection
+### 7.4 Anomaly Detection
 - Isolation Forest + LOF + Z-score ensemble
 - Risk thresholds mapped to `normal/elevated/high/critical`
 - Rule-boosted scoring for operational edge cases
 
-## 7. Feature Engineering Highlights
+## 8. Feature Engineering Highlights
 
 - Temporal features: day/week/month/quarter, cyclical sin/cos
 - Rolling stats: 7/14/30-day congestion mean/std
@@ -225,7 +231,7 @@ Synthetic generation follows explicit stochastic assumptions with causal structu
   - congestion × traffic
 - Composite risk score in [0, 1]
 
-## 8. API Endpoints
+## 9. API Endpoints
 
 Service: `src/api/app.py`
 
@@ -237,7 +243,7 @@ Service: `src/api/app.py`
 - `GET /congestion` current port alerts
 - `GET /metrics` operational KPIs
 
-## 9. Dashboard Capabilities
+## 10. Dashboard Capabilities
 
 App: `dashboard/streamlit_app.py`
 
@@ -248,13 +254,7 @@ App: `dashboard/streamlit_app.py`
 - Port congestion monitoring
 - Interactive what-if predictor
 
-### Dashboard Preview
-
-The dashboard screenshot is stored at `reports/figures/dashboard-overview.png` and rendered below.
-
-![Dashboard Overview](reports/figures/dashboard-overview.png)
-
-## 10. Installation
+## 11. Installation
 
 ### Prerequisites
 - Python 3.10+
@@ -272,7 +272,7 @@ pip install --upgrade pip
 pip install -r requirements.txt
 ```
 
-## 11. How to Run (End-to-End)
+## 12. How to Run (End-to-End)
 
 ### Step 1: Generate synthetic datasets
 
@@ -325,7 +325,7 @@ Open docs at:
 streamlit run dashboard/streamlit_app.py
 ```
 
-## 12. Testing
+## 13. Testing
 
 Run smoke/unit tests:
 
@@ -333,7 +333,7 @@ Run smoke/unit tests:
 pytest -q
 ```
 
-## 13. Reproducibility and Research Notes
+## 14. Reproducibility and Research Notes
 
 - Fixed random seeds across generation and training scripts
 - Time-aware splitting prevents leakage from future data
@@ -341,7 +341,7 @@ pytest -q
 - Dataset relationships enforce realistic relational joins
 - Delay labels are causally linked to exogenous and endogenous features
 
-## 14. Suggested Production Roadmap
+## 15. Suggested Production Roadmap
 
 1. Replace synthetic generator with real ETL from TMS/WMS/ERP.
 2. Add MLflow experiment tracking and model registry.
@@ -349,53 +349,13 @@ pytest -q
 4. Deploy with Docker + CI/CD + observability stack.
 5. Add RBAC and API authentication.
 
-## 15. Citation / Acknowledgment
+## 16. Citation / Acknowledgment
 
 If you use this project for research or prototyping, cite as:
 
 > Agentic-SupplyChain-Decision-System: Predictive Monitoring for Supply Chain Disruptions (2026), synthetic benchmark implementation with XGBoost, LSTM, and anomaly detection.
 
-## 16. Next Steps (System Development)
-
-This roadmap focuses on developing the system from prototype to production-ready platform.
-
-1. Phase 1: Data Foundation
-- Integrate real data sources from TMS/WMS/ERP into a unified ingestion layer.
-- Define data contracts and schema versioning for all core entities.
-- Add automated data quality checks (freshness, completeness, integrity, drift).
-- Deliverable: production ETL/ELT pipeline with monitored daily refresh.
-
-2. Phase 2: Feature Store and Training Orchestration
-- Convert feature engineering into scheduled, reproducible jobs.
-- Persist curated features in a feature store (offline and online variants).
-- Implement experiment tracking and model registry for all training runs.
-- Deliverable: reproducible training pipeline with lineage and model governance.
-
-3. Phase 3: Model Reliability and Risk Controls
-- Add threshold optimization and business-cost-aware objective tuning.
-- Implement probabilistic calibration and confidence intervals for predictions.
-- Add route/supplier-level bias and stability checks before deployment.
-- Deliverable: validated model package with acceptance criteria and rollback plan.
-
-4. Phase 4: Serving Architecture and Integration
-- Harden the API with authentication, authorization, rate limiting, and audit logs.
-- Introduce asynchronous inference for batch scoring and event-driven updates.
-- Integrate outputs into planning workflows (alerts, ticketing, reroute triggers).
-- Deliverable: secure, scalable inference service integrated with operations.
-
-5. Phase 5: Monitoring, Observability, and MLOps
-- Add dashboards for model performance, drift, and SLA adherence.
-- Implement canary deployment, shadow testing, and automated rollback.
-- Schedule retraining with guardrails and post-deployment evaluation checks.
-- Deliverable: closed-loop MLOps lifecycle with continuous monitoring.
-
-6. Phase 6: Decision Intelligence and Optimization
-- Extend from prediction to prescriptive actions (rerouting, expedite mode, supplier fallback).
-- Add scenario simulation for disruption stress testing and what-if analysis.
-- Quantify business impact (cost avoided, SLA uplift, recovery time reduction).
-- Deliverable: decision-support layer tied to measurable operational KPIs.
-
-## 17. High-Level Architecture Diagram
+## 19. High-Level Architecture Diagram
 
 ```mermaid
 flowchart LR
@@ -425,4 +385,15 @@ flowchart LR
   J --> K[Feedback Loop\nOutcomes, drift, retraining triggers]
   K --> D
 ```
+
+## 20. Next Steps (System Development)
+
+This roadmap focuses on developing the system from prototype to production-ready platform.
+
+- **Phase 1: Data Foundation** — Integrate real data sources, define schemas, add quality checks
+- **Phase 2: Feature Store and Training Orchestration** — Scheduled jobs, feature persistence, experiment tracking
+- **Phase 3: Model Reliability and Risk Controls** — Threshold optimization, calibration, bias checks
+- **Phase 4: Serving Architecture and Integration** — Hardened API, async inference, operational integration
+- **Phase 5: Monitoring, Observability, and MLOps** — Performance dashboards, canary deployments, scheduled retraining
+- **Phase 6: Decision Intelligence and Optimization** — Prescriptive actions, scenario simulation, business impact quantification
 
