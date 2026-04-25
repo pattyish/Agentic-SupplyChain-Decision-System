@@ -1,6 +1,6 @@
-# AI-Driven Predictive Monitoring System for Supply Chain Disruptions
+# Agentic-SupplyChain-Decision-System: Predictive Monitoring for Supply Chain Disruptions
 
-Research-grade end-to-end project for proactive supply chain risk intelligence, including:
+Research-grade end-to-end agentic decision and predictive monitoring system for proactive supply chain risk intelligence, including:
 - Synthetic data generation with realistic statistical dependencies
 - Delay-risk prediction (classification + regression)
 - Temporal forecasting (LSTM)
@@ -24,7 +24,7 @@ This project implements a predictive monitoring framework to:
 2. Train robust ML models for delay probability and delay-hours estimation.
 3. Forecast temporal congestion dynamics via sequence modeling.
 4. Detect anomalies for operational early warning.
-5. Expose predictions through API and dashboard for practical MLOps integration.
+5. Expose predictions and decision support signals through API and dashboard for practical MLOps integration.
 
 ## 3. Scope
 
@@ -51,7 +51,7 @@ This project implements a predictive monitoring framework to:
 ## 4. Repository Structure
 
 ```text
-SupplyChain-Predictive-Monitoring-AI/
+Agentic-SupplyChain-Decision-System/
 ├── data/
 │   ├── generate_data.py
 │   ├── shipments.csv
@@ -89,6 +89,78 @@ SupplyChain-Predictive-Monitoring-AI/
 ├── README.md
 └── AGENT.md
 ```
+
+## 18. Implemented Improvement Baseline
+
+The following items from the improvement roadmap are now implemented in code:
+
+1. Reliability and Data Quality
+- Pandera data contracts and quality gate in `src/data/contracts.py`.
+- Training now blocks on failed quality checks (`fail_on_error` in `configs/config.yaml`).
+- Automated data quality report output to `reports/data_quality_report.json`.
+
+2. MLOps and Reproducibility
+- Optional MLflow tracking in `src/mlops/tracking.py` for XGBoost and LSTM runs.
+- Dataset lineage manifest saved to `models/lineage_manifest.json`.
+- Docker packaging via `Dockerfile` and `docker-compose.yml`.
+
+3. Model Quality and Safety
+- Classifier calibration support (sigmoid) saved as `models/xgb_classifier_calibrator.joblib`.
+- Slice metrics by mode/weather/supplier bucket saved to `models/slice_metrics.json`.
+- Champion-challenger promotion gate saved to `models/promotion_decision.json` and `models/champion_metrics.json`.
+
+4. Serving and Performance
+- FastAPI auth toggle + API key validation.
+- Request rate limiting and audit middleware.
+- Prediction response caching and async batch job endpoints:
+  - `POST /predict/batch/async`
+  - `GET /predict/batch/async/{job_id}`
+
+5. Monitoring and Continuous Learning
+- Drift and prediction-quality monitoring pipeline in `src/monitoring/run_monitoring.py`.
+- Monitoring report output to `reports/monitoring_report.json`.
+- Scheduled retraining + approval gate script in `src/mlops/retrain.py`.
+
+6. Decision Intelligence
+- Action recommendation and cost-impact estimation in `src/decision/intelligence.py`.
+- API prediction now includes action, expected delay reduction, and estimated cost avoided.
+
+## 19. New Operational Commands
+
+```bash
+# Train with quality gates + lineage + champion-challenger + calibration
+python -m src.models.train_xgboost
+
+# Train LSTM with quality gate + optional MLflow logging
+python -m src.models.train_lstm
+
+# Run drift and production quality monitoring
+python -m src.monitoring.run_monitoring
+
+# Run scheduled retraining workflow with approval/rollback markers
+python -m src.mlops.retrain
+
+# Run services in containers
+docker compose up --build
+
+# Install Playwright browser (first time only)
+python -m playwright install chromium
+
+# Export dashboard images (requires Streamlit app running)
+python scripts/export_dashboard_images.py
+```
+
+Dashboard image outputs:
+- `reports/figures/dashboard-full.png`
+- `reports/figures/dashboard-overview.png`
+- `reports/figures/dashboard-kpis.png`
+
+Model/design tab image inputs (optional):
+- `dashboard/assets/architecture.png`
+- `dashboard/assets/pipeline.png`
+- `dashboard/assets/model_performance.png`
+- `dashboard/assets/explainability.png`
+- `dashboard/assets/forecasting.png`
 
 ## 5. Data Design and Synthetic Generation Logic
 
@@ -175,6 +247,12 @@ App: `dashboard/streamlit_app.py`
 - Anomaly table and severity distribution
 - Port congestion monitoring
 - Interactive what-if predictor
+
+### Dashboard Preview
+
+The dashboard screenshot is stored at `reports/figures/dashboard-overview.png` and rendered below.
+
+![Dashboard Overview](reports/figures/dashboard-overview.png)
 
 ## 10. Installation
 
@@ -275,7 +353,7 @@ pytest -q
 
 If you use this project for research or prototyping, cite as:
 
-> AI-Driven Predictive Monitoring System for Supply Chain Disruptions (2026), synthetic benchmark implementation with XGBoost, LSTM, and anomaly detection.
+> Agentic-SupplyChain-Decision-System: Predictive Monitoring for Supply Chain Disruptions (2026), synthetic benchmark implementation with XGBoost, LSTM, and anomaly detection.
 
 ## 16. Next Steps (System Development)
 
@@ -316,4 +394,35 @@ This roadmap focuses on developing the system from prototype to production-ready
 - Add scenario simulation for disruption stress testing and what-if analysis.
 - Quantify business impact (cost avoided, SLA uplift, recovery time reduction).
 - Deliverable: decision-support layer tied to measurable operational KPIs.
+
+## 17. High-Level Architecture Diagram
+
+```mermaid
+flowchart LR
+  A[Data Sources\nTMS/WMS/ERP or Synthetic Generator] --> B[Ingestion and Validation\nSchema checks, quality checks]
+  B --> C[Data Storage\nCSV/DB/Feature tables]
+  C --> D[Feature Engineering Pipeline\nTemporal, lag, rolling, interactions]
+
+  D --> E1[XGBoost Classifier\nDelay risk]
+  D --> E2[XGBoost Regressor\nDelay hours]
+  D --> E3[LSTM Forecaster\n7-day congestion]
+  D --> E4[Anomaly Ensemble\nIsolation Forest + LOF + Z-score]
+
+  E1 --> F[Model Artifacts\nVersioned models + metadata]
+  E2 --> F
+  E3 --> F
+  E4 --> F
+
+  F --> G[FastAPI Inference Layer\nSingle/batch prediction, anomalies, KPIs]
+  C --> G
+  D --> G
+
+  G --> H[Streamlit Monitoring Dashboard]
+  G --> I[Operational Systems\nAlerts, ticketing, reroute workflows]
+
+  H --> J[Human-in-the-Loop Decisions\nPlanner/ops actions]
+  I --> J
+  J --> K[Feedback Loop\nOutcomes, drift, retraining triggers]
+  K --> D
+```
 

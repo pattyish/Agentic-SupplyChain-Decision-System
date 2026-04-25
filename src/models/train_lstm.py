@@ -63,6 +63,8 @@ from torch.utils.data import DataLoader, TensorDataset
 import sys
 sys.path.insert(0, str(Path(__file__).parents[2]))
 from src.data.loader import SupplyChainLoader
+from src.data.contracts import run_data_quality_gate
+from src.mlops.tracking import mlflow_run
 
 logging.basicConfig(level=logging.INFO, format="%(levelname)s | %(message)s")
 logger = logging.getLogger(__name__)
@@ -335,10 +337,15 @@ def main() -> None:
     cfg       = _load_config()
     lcfg      = cfg["lstm"]
     model_dir = _model_dir(cfg)
+    reports_dir = Path(__file__).parents[2] / "reports"
+    reports_dir.mkdir(parents=True, exist_ok=True)
 
     loader = SupplyChainLoader()
     cng    = loader.port_congestion()
     wth    = loader.weather()
+
+    if cfg.get("data_quality", {}).get("enabled", True):
+        run_data_quality_gate({"congestion": cng, "weather": wth}, cfg, reports_dir)
 
     # Build all sequences
     X_all, y_all, scaler = build_sequences(
@@ -357,36 +364,47 @@ def main() -> None:
     X_te, y_te = X_all[t2:], y_all[t2:]
     logger.info("Sequence split  train:%d  val:%d  test:%d", len(X_tr), len(X_vl), len(X_te))
 
-    model, tr_hist, vl_hist = train_lstm(X_tr, y_tr, X_vl, y_vl, cfg)
+    with mlflow_run(cfg, "train-lstm") as mlf:
+        model, tr_hist, vl_hist = train_lstm(X_tr, y_tr, X_vl, y_vl, cfg)
 
-    # ── Test evaluation ───────────────────────────────────────────────────────
-    model.eval()
-    with torch.no_grad():
-        preds = model(torch.tensor(X_te, dtype=torch.float32).to(DEVICE)).cpu().numpy()
+        # ── Test evaluation ───────────────────────────────────────────────────
+        model.eval()
+        with torch.no_grad():
+            preds = model(torch.tensor(X_te, dtype=torch.float32).to(DEVICE)).cpu().numpy()
 
-    mae    = np.mean(np.abs(preds - y_te))
-    rmse   = np.sqrt(np.mean((preds - y_te) ** 2))
-    logger.info("TEST  │  MAE=%.4f  │  RMSE=%.4f  (congestion units)", mae, rmse)
+        mae    = np.mean(np.abs(preds - y_te))
+        rmse   = np.sqrt(np.mean((preds - y_te) ** 2))
+        logger.info("TEST  │  MAE=%.4f  │  RMSE=%.4f  (congestion units)", mae, rmse)
 
-    # ── Persist ───────────────────────────────────────────────────────────────
-    torch.save(model.state_dict(), model_dir / "lstm_forecaster.pt")
-    joblib.dump(scaler, model_dir / "lstm_scaler.joblib")
+        # ── Persist ───────────────────────────────────────────────────────────
+        torch.save(model.state_dict(), model_dir / "lstm_forecaster.pt")
+        joblib.dump(scaler, model_dir / "lstm_scaler.joblib")
 
-    lstm_meta = {
-        "input_size":       X_tr.shape[2],
-        "hidden_size":      lcfg["hidden_size"],
-        "num_layers":       lcfg["num_layers"],
-        "forecast_horizon": lcfg["forecast_horizon"],
-        "dropout":          lcfg["dropout"],
-        "sequence_length":  lcfg["sequence_length"],
-        "input_features":   lcfg["input_features"],
-        "test_mae":         float(mae),
-        "test_rmse":        float(rmse),
-    }
-    with open(model_dir / "lstm_config.json", "w") as f:
-        json.dump(lstm_meta, f, indent=2)
+        lstm_meta = {
+            "input_size":       X_tr.shape[2],
+            "hidden_size":      lcfg["hidden_size"],
+            "num_layers":       lcfg["num_layers"],
+            "forecast_horizon": lcfg["forecast_horizon"],
+            "dropout":          lcfg["dropout"],
+            "sequence_length":  lcfg["sequence_length"],
+            "input_features":   lcfg["input_features"],
+            "test_mae":         float(mae),
+            "test_rmse":        float(rmse),
+            "train_samples":    int(len(X_tr)),
+            "val_samples":      int(len(X_vl)),
+            "test_samples":     int(len(X_te)),
+        }
+        with open(model_dir / "lstm_config.json", "w") as f:
+            json.dump(lstm_meta, f, indent=2)
 
-    logger.info("LSTM artefacts saved to %s", model_dir)
+        if hasattr(mlf, "log_metric"):
+            mlf.log_metric("lstm_test_mae", float(mae))
+            mlf.log_metric("lstm_test_rmse", float(rmse))
+            mlf.log_metric("lstm_train_samples", float(len(X_tr)))
+            mlf.log_metric("lstm_val_samples", float(len(X_vl)))
+            mlf.log_metric("lstm_test_samples", float(len(X_te)))
+
+        logger.info("LSTM artefacts saved to %s", model_dir)
 
 
 if __name__ == "__main__":

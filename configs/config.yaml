@@ -3,7 +3,7 @@
 # =============================================================================
 
 project:
-  name: "AI-Driven Predictive Monitoring System for Supply Chain Disruptions"
+  name: "Agentic-SupplyChain-Decision-System: Predictive Monitoring for Supply Chain Disruptions"
   version: "1.0.0"
   description: >
     End-to-end ML system for predicting shipment delays, estimating disruption
@@ -100,6 +100,20 @@ api:
   port:    8000
   reload:  false
   log_level: "info"
+  security:
+    auth_enabled: false
+    api_key_header: "X-API-Key"
+    api_key: "change-me"
+  rate_limit:
+    requests_per_minute: 120
+  cache:
+    enabled: true
+    ttl_seconds: 300
+  async_batch:
+    enabled: true
+    max_jobs: 200
+  audit:
+    enabled: true
 
 # ─── Dashboard ────────────────────────────────────────────────────────────────
 dashboard:
@@ -107,3 +121,46 @@ dashboard:
   page_title:    "Supply Chain AI Monitor"
   refresh_secs:  60
   default_lookback_days: 90
+
+# ─── Data Quality ─────────────────────────────────────────────────────────────
+data_quality:
+  enabled: true
+  fail_on_error: true
+  max_missing_ratio: 0.05
+  max_allowed_freshness_days: 7
+  save_report: true
+
+# ─── MLOps ────────────────────────────────────────────────────────────────────
+mlops:
+  mlflow:
+    enabled: false
+    tracking_uri: "file:./mlruns"
+    experiment_name: "supply-chain-monitoring"
+  champion_challenger:
+    enabled: true
+    promote_if_f1_gain_min: 0.005
+  calibration:
+    enabled: true
+    method: "sigmoid"
+
+# ─── Monitoring and SLO ───────────────────────────────────────────────────────
+monitoring:
+  drift:
+    enabled: true
+    psi_warn: 0.1
+    psi_critical: 0.25
+  slo:
+    p95_latency_ms: 300
+    uptime_pct: 99.5
+    min_alert_precision: 0.70
+    min_decision_lead_time_hours: 12
+
+# ─── Decision Intelligence ────────────────────────────────────────────────────
+decision:
+  mode_cost_multiplier:
+    ship: 1.0
+    truck: 1.25
+    air: 2.2
+  reroute_reduction_factor: 0.35
+  expedite_reduction_factor: 0.55
+  fallback_supplier_reduction_factor: 0.30
