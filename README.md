@@ -10,9 +10,9 @@ Research-grade end-to-end agentic decision and predictive monitoring system for 
 
 ## 1. Dashboard Overview
 
-**Click the dashboard preview below to view the full interactive screenshot:**
+📊 **[View Full Dashboard →](reports/figures/dashboard-full.png)**
 
-[![Dashboard Preview](reports/figures/Dashbord_half_page.png)](reports/figures/dashboard-full.png)
+![Dashboard Preview](reports/figures/Dashbord_half_page.png)
 
 ## 2. Why This Project
 
