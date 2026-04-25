@@ -96,42 +96,7 @@ Agentic-SupplyChain-Decision-System/
 └── AGENT.md
 ```
 
-## 17. Implemented Improvement Baseline
-
-The following items from the improvement roadmap are now implemented in code:
-
-1. Reliability and Data Quality
-- Pandera data contracts and quality gate in `src/data/contracts.py`.
-- Training now blocks on failed quality checks (`fail_on_error` in `configs/config.yaml`).
-- Automated data quality report output to `reports/data_quality_report.json`.
-
-2. MLOps and Reproducibility
-- Optional MLflow tracking in `src/mlops/tracking.py` for XGBoost and LSTM runs.
-- Dataset lineage manifest saved to `models/lineage_manifest.json`.
-- Docker packaging via `Dockerfile` and `docker-compose.yml`.
-
-3. Model Quality and Safety
-- Classifier calibration support (sigmoid) saved as `models/xgb_classifier_calibrator.joblib`.
-- Slice metrics by mode/weather/supplier bucket saved to `models/slice_metrics.json`.
-- Champion-challenger promotion gate saved to `models/promotion_decision.json` and `models/champion_metrics.json`.
-
-4. Serving and Performance
-- FastAPI auth toggle + API key validation.
-- Request rate limiting and audit middleware.
-- Prediction response caching and async batch job endpoints:
-  - `POST /predict/batch/async`
-  - `GET /predict/batch/async/{job_id}`
-
-5. Monitoring and Continuous Learning
-- Drift and prediction-quality monitoring pipeline in `src/monitoring/run_monitoring.py`.
-- Monitoring report output to `reports/monitoring_report.json`.
-- Scheduled retraining + approval gate script in `src/mlops/retrain.py`.
-
-6. Decision Intelligence
-- Action recommendation and cost-impact estimation in `src/decision/intelligence.py`.
-- API prediction now includes action, expected delay reduction, and estimated cost avoided.
-
-## 18. New Operational Commands
+## 6. New Operational Commands
 
 ```bash
 # Train with quality gates + lineage + champion-challenger + calibration
@@ -156,19 +121,7 @@ python -m playwright install chromium
 python scripts/export_dashboard_images.py
 ```
 
-Dashboard image outputs:
-- `reports/figures/dashboard-full.png`
-- `reports/figures/dashboard-overview.png`
-- `reports/figures/dashboard-kpis.png`
-
-Model/design tab image inputs (optional):
-- `dashboard/assets/architecture.png`
-- `dashboard/assets/pipeline.png`
-- `dashboard/assets/model_performance.png`
-- `dashboard/assets/explainability.png`
-- `dashboard/assets/forecasting.png`
-
-## 6. Data Design and Synthetic Generation Logic
+## 7. Data Design and Synthetic Generation Logic
 
 Synthetic generation follows explicit stochastic assumptions with causal structure:
 
@@ -193,34 +146,34 @@ Synthetic generation follows explicit stochastic assumptions with causal structu
 - Event process intensity increases with delay severity
 - Event type weighted by underlying causal factors
 
-## 7. Modeling Architecture
+## 8. Modeling Architecture
 
-### 7.1 Delay Classification
+### 8.1 Delay Classification
 - Algorithm: XGBoostClassifier
 - Target: `delayed` (0/1)
 - Metrics: ROC-AUC, Average Precision, F1-Macro
 - Imbalance handling: dynamic `scale_pos_weight`
 
-### 7.2 Delay-Hours Regression
+### 8.2 Delay-Hours Regression
 - Algorithm: XGBoostRegressor
 - Target: `delay_hours`
 - Trained on delayed shipments only
 - Log-transform target for variance stabilization
 - Metrics: RMSE, MAE, R²
 
-### 7.3 Sequence Forecasting
+### 8.3 Sequence Forecasting
 - Algorithm: PyTorch LSTM
 - Input window: 30 days
 - Horizon: 7 days
 - Features: congestion, queue time, weather severity
 - Metrics: step-wise MAE/RMSE
 
-### 7.4 Anomaly Detection
+### 8.4 Anomaly Detection
 - Isolation Forest + LOF + Z-score ensemble
 - Risk thresholds mapped to `normal/elevated/high/critical`
 - Rule-boosted scoring for operational edge cases
 
-## 8. Feature Engineering Highlights
+## 9. Feature Engineering Highlights
 
 - Temporal features: day/week/month/quarter, cyclical sin/cos
 - Rolling stats: 7/14/30-day congestion mean/std
@@ -231,7 +184,7 @@ Synthetic generation follows explicit stochastic assumptions with causal structu
   - congestion × traffic
 - Composite risk score in [0, 1]
 
-## 9. API Endpoints
+## 10. API Endpoints
 
 Service: `src/api/app.py`
 
@@ -243,7 +196,7 @@ Service: `src/api/app.py`
 - `GET /congestion` current port alerts
 - `GET /metrics` operational KPIs
 
-## 10. Dashboard Capabilities
+## 11. Dashboard Capabilities
 
 App: `dashboard/streamlit_app.py`
 
@@ -254,7 +207,7 @@ App: `dashboard/streamlit_app.py`
 - Port congestion monitoring
 - Interactive what-if predictor
 
-## 11. Installation
+## 12. Installation
 
 ### Prerequisites
 - Python 3.10+
@@ -272,7 +225,7 @@ pip install --upgrade pip
 pip install -r requirements.txt
 ```
 
-## 12. How to Run (End-to-End)
+## 13. How to Run (End-to-End)
 
 ### Step 1: Generate synthetic datasets
 
@@ -325,7 +278,7 @@ Open docs at:
 streamlit run dashboard/streamlit_app.py
 ```
 
-## 13. Testing
+## 14. Testing
 
 Run smoke/unit tests:
 
@@ -333,7 +286,7 @@ Run smoke/unit tests:
 pytest -q
 ```
 
-## 14. Reproducibility and Research Notes
+## 15. Reproducibility and Research Notes
 
 - Fixed random seeds across generation and training scripts
 - Time-aware splitting prevents leakage from future data
@@ -341,7 +294,7 @@ pytest -q
 - Dataset relationships enforce realistic relational joins
 - Delay labels are causally linked to exogenous and endogenous features
 
-## 15. Suggested Production Roadmap
+## 16. Suggested Production Roadmap
 
 1. Replace synthetic generator with real ETL from TMS/WMS/ERP.
 2. Add MLflow experiment tracking and model registry.
@@ -349,13 +302,7 @@ pytest -q
 4. Deploy with Docker + CI/CD + observability stack.
 5. Add RBAC and API authentication.
 
-## 16. Citation / Acknowledgment
-
-If you use this project for research or prototyping, cite as:
-
-> Agentic-SupplyChain-Decision-System: Predictive Monitoring for Supply Chain Disruptions (2026), synthetic benchmark implementation with XGBoost, LSTM, and anomaly detection.
-
-## 19. High-Level Architecture Diagram
+## 17. High-Level Architecture Diagram
 
 ```mermaid
 flowchart LR
@@ -386,7 +333,7 @@ flowchart LR
   K --> D
 ```
 
-## 20. Next Steps (System Development)
+## 18. Next Steps (System Development)
 
 This roadmap focuses on developing the system from prototype to production-ready platform.
 
